@@ -1,19 +1,21 @@
-package com.example.model;
+package com.example.service;
 
-public class User {
-    private String username;
-    private String password;
+import com.example.dao.UserDAO;
+import com.example.model.User;
 
-    public User(String username, String password) {
-        this.username = username;
-        this.password = password;
+public class UserService {
+    private UserDAO userDAO;
+
+    public UserService(UserDAO userDAO) {
+        this.userDAO = userDAO;
     }
 
-    public String getUsername() {
-        return username;
+    public void registerUser (String username, String password) {
+        User user = new User(username, password);
+        userDAO.saveUser (user);
     }
 
-    public String getPassword() {
-        return password;
+    public User getUser (String username) {
+        return userDAO.findUser ByUsername(username);
     }
 }
