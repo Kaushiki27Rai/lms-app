@@ -20,14 +20,18 @@ public class DashboardServlet extends HttpServlet {
 
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("user") == null) {
-            response.sendRedirect(request.getContextPath() + "/auth?action=login");
+            response.sendRedirect(request.getContextPath() + "/auth");
             return;
         }
 
         User user = (User) session.getAttribute("user");
         request.setAttribute("currentUser", user);
 
-        request.getRequestDispatcher("/dashboard.jsp").forward(request, response);
+        if ("instructor".equalsIgnoreCase(user.getRole()) || "admin".equalsIgnoreCase(user.getRole())) {
+            request.getRequestDispatcher("/instructor-dashboard.jsp").forward(request, response);
+        } else {
+            request.getRequestDispatcher("/student-dashboard.jsp").forward(request, response);
+        }
     }
 
     @Override

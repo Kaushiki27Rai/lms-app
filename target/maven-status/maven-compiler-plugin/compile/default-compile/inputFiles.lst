@@ -2,6 +2,7 @@
 /Users/kaushikirai/Documents/Java Project/lms-app/src/main/java/com/lms/controller/CourseServlet.java
 /Users/kaushikirai/Documents/Java Project/lms-app/src/main/java/com/lms/controller/DashboardServlet.java
 /Users/kaushikirai/Documents/Java Project/lms-app/src/main/java/com/lms/controller/HouseServlet.java
+/Users/kaushikirai/Documents/Java Project/lms-app/src/main/java/com/lms/controller/LandingServlet.java
 /Users/kaushikirai/Documents/Java Project/lms-app/src/main/java/com/lms/controller/QuizServlet.java
 /Users/kaushikirai/Documents/Java Project/lms-app/src/main/java/com/lms/dao/CourseDao.java
 /Users/kaushikirai/Documents/Java Project/lms-app/src/main/java/com/lms/dao/QuizDao.java

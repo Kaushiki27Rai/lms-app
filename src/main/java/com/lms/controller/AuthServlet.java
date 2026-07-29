@@ -11,7 +11,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
 
-@WebServlet("/auth")
+@WebServlet({"/auth", "/login", "/signup", "/logout"})
 public class AuthServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
@@ -26,65 +26,74 @@ public class AuthServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
+        String path = request.getServletPath();
         String action = request.getParameter("action");
-        if (action == null) {
-            action = "login";
+
+        if ("/logout".equalsIgnoreCase(path) || "logout".equalsIgnoreCase(action)) {
+            HttpSession session = request.getSession(false);
+            if (session != null) {
+                session.invalidate();
+            }
+            response.sendRedirect(request.getContextPath() + "/auth?msg=logged_out");
+            return;
         }
 
-        switch (action) {
-            case "logout":
-                HttpSession session = request.getSession(false);
-                if (session != null) {
-                    session.invalidate();
-                }
-                response.sendRedirect(request.getContextPath() + "/auth?action=login&msg=logged_out");
-                break;
-            case "register":
-                request.getRequestDispatcher("/registration.jsp").forward(request, response);
-                break;
-            case "login":
-            default:
-                request.getRequestDispatcher("/registration.jsp").forward(request, response);
-                break;
+        if ("/signup".equalsIgnoreCase(path) || "signup".equalsIgnoreCase(action)) {
+            request.getRequestDispatcher("/signup.jsp").forward(request, response);
+            return;
         }
+
+        // Default Login View
+        request.getRequestDispatcher("/login.jsp").forward(request, response);
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
+        String path = request.getServletPath();
         String action = request.getParameter("action");
-        if (action == null) {
-            action = "login";
-        }
 
-        if ("register".equalsIgnoreCase(action)) {
+        if ("/signup".equalsIgnoreCase(path) || "signup".equalsIgnoreCase(action) || "register".equalsIgnoreCase(action)) {
             handleRegister(request, response);
-        } else if ("login".equalsIgnoreCase(action)) {
-            handleLogin(request, response);
         } else {
-            response.sendRedirect(request.getContextPath() + "/auth?action=login");
+            handleLogin(request, response);
         }
     }
 
     private void handleRegister(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        String username = request.getParameter("username");
-        String email = request.getParameter("email");
-        String password = request.getParameter("password");
+        User newUser = new User();
+        newUser.setUsername(request.getParameter("username"));
+        newUser.setEmail(request.getParameter("email"));
+        newUser.setPassword(request.getParameter("password"));
+        
         String role = request.getParameter("role");
+        if (role == null || role.trim().isEmpty()) role = "student";
+        newUser.setRole(role.toLowerCase());
 
-        String result = userService.register(username, email, password, role);
+        if ("instructor".equalsIgnoreCase(role)) {
+            newUser.setEmployeeId(request.getParameter("employeeId"));
+            newUser.setDepartment(request.getParameter("department"));
+            newUser.setDesignation(request.getParameter("designation"));
+            newUser.setExpertise(request.getParameter("expertise"));
+        } else {
+            newUser.setStudentId(request.getParameter("studentId"));
+            newUser.setDepartment(request.getParameter("department"));
+            newUser.setSemester(request.getParameter("semester"));
+            newUser.setYear(request.getParameter("year"));
+        }
+
+        String result = userService.registerUserFull(newUser);
 
         if ("SUCCESS".equals(result)) {
-            request.setAttribute("successMessage", "Account created successfully! Please log in.");
-            request.getRequestDispatcher("/registration.jsp").forward(request, response);
+            request.setAttribute("successMessage", "Account created successfully! Please log in below.");
+            request.getRequestDispatcher("/login.jsp").forward(request, response);
         } else {
             request.setAttribute("errorMessage", result);
-            request.setAttribute("prevUsername", username);
-            request.setAttribute("prevEmail", email);
-            request.getRequestDispatcher("/registration.jsp").forward(request, response);
+            request.setAttribute("user", newUser);
+            request.getRequestDispatcher("/signup.jsp").forward(request, response);
         }
     }
 
@@ -101,18 +110,11 @@ public class AuthServlet extends HttpServlet {
             session.setAttribute("user", user);
             session.setAttribute("userRole", user.getRole());
 
-            // Redirect based on user role
-            if ("instructor".equalsIgnoreCase(user.getRole())) {
-                response.sendRedirect(request.getContextPath() + "/dashboard?role=instructor");
-            } else if ("admin".equalsIgnoreCase(user.getRole())) {
-                response.sendRedirect(request.getContextPath() + "/dashboard?role=admin");
-            } else {
-                response.sendRedirect(request.getContextPath() + "/dashboard?role=student");
-            }
+            response.sendRedirect(request.getContextPath() + "/dashboard");
         } else {
-            request.setAttribute("errorMessage", "Invalid email or password.");
+            request.setAttribute("errorMessage", "Invalid email address or password.");
             request.setAttribute("prevEmail", email);
-            request.getRequestDispatcher("/registration.jsp").forward(request, response);
+            request.getRequestDispatcher("/login.jsp").forward(request, response);
         }
     }
 }

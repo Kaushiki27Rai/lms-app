@@ -15,28 +15,22 @@ public class UserService {
         this.userDao = userDao;
     }
 
-    public String register(String username, String email, String password, String role) {
-        if (username == null || username.trim().isEmpty()) {
-            return "Username is required.";
+    public String registerUserFull(User newUser) {
+        if (newUser.getUsername() == null || newUser.getUsername().trim().isEmpty()) {
+            return "Full Name is required.";
         }
-        if (email == null || !email.matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
+        if (newUser.getEmail() == null || !newUser.getEmail().matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
             return "Please enter a valid email address.";
         }
-        if (password == null || password.length() < 6) {
+        if (newUser.getPassword() == null || newUser.getPassword().length() < 6) {
             return "Password must be at least 6 characters long.";
         }
 
-        if (userDao.existsByEmail(email.trim())) {
+        if (userDao.existsByEmail(newUser.getEmail().trim())) {
             return "An account with this email already exists.";
         }
 
-        String validRole = (role != null && (role.equalsIgnoreCase("instructor") || role.equalsIgnoreCase("admin")))
-                ? role.toLowerCase()
-                : "student";
-
-        User newUser = new User(username.trim(), password, email.trim().toLowerCase(), validRole);
         boolean success = userDao.registerUser(newUser);
-
         return success ? "SUCCESS" : "Registration failed due to a database error.";
     }
 

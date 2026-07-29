@@ -3,6 +3,7 @@ com/lms/util/PasswordUtils.class
 com/lms/dao/CourseDao.class
 com/lms/controller/CourseServlet.class
 com/lms/model/User.class
+com/lms/controller/LandingServlet.class
 com/lms/model/Lesson.class
 com/lms/controller/DashboardServlet.class
 com/lms/service/CourseService.class

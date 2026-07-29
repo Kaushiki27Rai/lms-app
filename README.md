@@ -1,62 +1,87 @@
-# 🎓 LMS Web Application
+# 🎓 LMS — Learn Smarter. Teach Better.
 
-A full-featured **Learning Management System (LMS)** built with Java Servlets, JSP, MySQL, Bootstrap 5, and Maven using clean **Layered MVC/MVVM Architecture**.
-
----
-
-## 🌟 Key Features
-
-* **User Authentication & Roles**:
-  * Role-based access control for **Students**, **Instructors / Teachers**, and **Admins**.
-  * Password security hashing with SHA-256 / BCrypt (`PasswordUtils.java`).
-  * Tabbed login and registration UI with live password strength meter.
-
-* **Course Catalog & Management**:
-  * Explore courses, view instructor details, start/end dates, and syllabus.
-  * Student course enrollment with real-time status tracking.
-  * Instructor view to publish new courses.
-
-* **Interactive MCQ Quiz Engine**:
-  * Take course assessment quizzes with multiple-choice questions (A, B, C, D).
-  * Automated instant score calculation and result reporting.
+> **A minimal, modern, role-based Learning Management System inspired by Notion, Linear, Apple Education, and Canvas.**
 
 ---
 
-## 🏗 Project Architecture
+## 🎨 Design Philosophy & UX Highlights
+
+* **Minimal & Purpose-Driven**: Zero clutter. No unnecessary buttons or navigation noise.
+* **Role-Based Workspaces**:
+  * 🎒 **Student Hub**: Dashboard-first design focused on "What should I do today?" with progress rings, upcoming assignment timelines, and recent announcements.
+  * 👨‍🏫 **Instructor Management Hub**: Focused on "Less learning, more management!" featuring class schedules, pending grading queues, quick actions, and student risk alerts.
+* **Apple & Linear Aesthetics**:
+  * Color Palette: Primary `#2563EB`, Background `#F8FAFC`, Accent Emerald `#10B981`, Cards `#FFFFFF`.
+  * Typography: `Inter` system fonts.
+  * Border Radii: `18px` Cards, `12px` Buttons, `10px` Inputs.
+  * Soft Shadows (`0 8px 30px rgba(0,0,0,0.06)`) and Glassmorphism cards.
+* **🤖 Floating AI Study Assistant**:
+  * Integrated study assistant widget for lecture note summaries, quiz generation, and student Q&A.
+
+---
+
+## ✨ Features & Workflows
+
+### 🌐 Landing & Marketing Page (`/landing`)
+* Hero Section ("Learn Smarter. Teach Better.")
+* Interactive Feature Grid (Assignment Tracking, Live Classes, Attendance, AI Assistant, Analytics, Discussion Forum)
+* Direct Role CTA Buttons (`[Start Learning]`, `[Become Instructor]`)
+
+### 🔐 Authentication Flow (`/login` & `/signup`)
+* **Glassmorphic Login Card**: Email, password, social SSO placeholders (Google, Microsoft).
+* **3-Step Interactive Sign-Up Wizard**:
+  * **Step 1**: Full Name, Email, Password.
+  * **Step 2**: Role Selection (Student vs. Instructor).
+    * *Student Fields*: Student ID, Department, Semester, Year.
+    * *Instructor Fields*: Employee ID, Department, Designation, Expertise.
+  * **Step 3**: Verification & Completion.
+
+### 📚 Course Management & Interactive Quizzes
+* **Student Course Hub**: Overview, Modules, Assignments, Announcements, and Grades.
+* **Instructor Course Creator**: Title, Description, Date range, and syllabus publishing.
+* **MCQ Quiz Engine**: Automated score calculation and instant performance results.
+
+---
+
+## 🏗 Technical Architecture
 
 ```
 lms-app/
-├── schema.sql                     # MySQL database schema & sample seed data
-├── pom.xml                        # Maven dependencies & build configuration
-├── src/main/java/com/lms/
-│   ├── model/                     # Domain Entities (User, Course, Lesson, Quiz, Question, QuizSubmission)
-│   ├── util/                      # Utilities (DBConnection, PasswordUtils)
-│   ├── dao/                       # Data Access Objects (UserDao, CourseDao, QuizDao)
-│   ├── service/                   # ViewModels & Services (UserService, CourseService, QuizService)
-│   └── controller/                # Servlet Controllers (AuthServlet, CourseServlet, QuizServlet, DashboardServlet)
-└── src/main/webapp/               # JSP Views & Assets (registration, dashboard, courses, course-detail, create-course, quiz)
+├── schema.sql                       # Enhanced MySQL schema (Users, Courses, Enrollments, Modules, Assignments, Quizzes, Attendance, Announcements)
+├── pom.xml                          # Maven build dependencies & embedded Jetty server
+├── run.sh                           # 1-Click launcher script
+├── src/main/webapp/
+│   ├── css/style.css                # Notion/Linear/Apple design system tokens & utilities
+│   ├── landing.jsp                  # Modern marketing landing page
+│   ├── login.jsp                    # Glassmorphism login view
+│   ├── signup.jsp                   # 3-step interactive signup wizard
+│   ├── student-dashboard.jsp        # Student role dashboard
+│   ├── instructor-dashboard.jsp     # Instructor management hub
+│   ├── courses.jsp                  # Course catalog view
+│   ├── course-detail.jsp            # Detailed syllabus & enrollment view
+│   ├── create-course.jsp            # Course publisher view
+│   └── quiz.jsp                     # Interactive test player
+└── src/main/java/com/lms/
+    ├── model/                       # Domain Entities (User, Course, Module, Assignment, Quiz, Question, QuizSubmission)
+    ├── util/                        # DBConnection & PasswordUtils
+    ├── dao/                         # Data Access Objects (UserDao, CourseDao, QuizDao)
+    ├── service/                     # ViewModels & Services (UserService, CourseService, QuizService)
+    └── controller/                  # Servlet Controllers (LandingServlet, AuthServlet, DashboardServlet, CourseServlet, QuizServlet)
 ```
 
 ---
 
-## 🛠 Prerequisites & Setup
+## 🚀 How to Run
 
-### 1. Database Configuration
-1. Open MySQL workbench or terminal.
-2. Execute `schema.sql` to create the `ManagementSystems` database and insert sample seed data:
+1. **Start the Application**:
    ```bash
-   mysql -u root -p < schema.sql
+   ./run.sh
    ```
+2. **Open in Browser**:
+   * Landing Page: `http://localhost:8080/`
+   * Login: `http://localhost:8080/login`
+   * Sign Up: `http://localhost:8080/signup`
 
-### 2. DB Credentials Configuration
-In `src/main/java/com/lms/util/DBConnection.java`, verify your MySQL username and password:
-```java
-private static final String URL = "jdbc:mysql://localhost:3306/ManagementSystems?...";
-private static final String USER = "root";
-private static final String PASSWORD = "your_mysql_password";
-```
-
-### 3. Run Application
-Deploy the WAR package on Apache Tomcat 9/10 or run via your preferred Java IDE (Eclipse, IntelliJ IDEA, NetBeans, or VS Code).
-
-Access the portal at: `http://localhost:8080/lms-app/auth`
+3. **Built-in Demo Accounts**:
+   * **Student**: `alice@example.com` / `password123`
+   * **Instructor**: `drsmith@example.com` / `securepassword`
