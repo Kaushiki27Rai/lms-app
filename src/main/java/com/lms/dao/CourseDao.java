@@ -20,22 +20,27 @@ public class CourseDao {
     private static final ConcurrentHashMap<String, Boolean> mockEnrollments = new ConcurrentHashMap<>();
 
     static {
-        Course sqlCourse = new Course(1, "Introduction to SQL", "Learn SQL database queries, joins, subqueries, and table schema design.", 1, new Date(System.currentTimeMillis()), new Date(System.currentTimeMillis() + 30L * 24 * 3600 * 1000), new Timestamp(System.currentTimeMillis()));
+        Course sqlCourse = new Course(1, "Data Structures & Algorithms", "Master trees, graphs, dynamic programming, and complexity analysis.", 1, new Date(System.currentTimeMillis()), new Date(System.currentTimeMillis() + 30L * 24 * 3600 * 1000), new Timestamp(System.currentTimeMillis()));
         sqlCourse.setInstructorName("Dr. Smith");
+        sqlCourse.setCategory("Computer Science");
+        sqlCourse.setBannerUrl("https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800");
 
-        Course javaCourse = new Course(2, "Java Web Application Architecture", "Master Servlets, JSP, MVC/MVVM patterns, and enterprise database integration.", 1, new Date(System.currentTimeMillis()), new Date(System.currentTimeMillis() + 60L * 24 * 3600 * 1000), new Timestamp(System.currentTimeMillis()));
+        Course javaCourse = new Course(2, "Database Management Systems", "Relational database design, SQL queries, indexing, and transaction management.", 1, new Date(System.currentTimeMillis()), new Date(System.currentTimeMillis() + 60L * 24 * 3600 * 1000), new Timestamp(System.currentTimeMillis()));
         javaCourse.setInstructorName("Dr. Smith");
+        javaCourse.setCategory("Computer Science");
+        javaCourse.setBannerUrl("https://images.unsplash.com/photo-1544383835-bda2bc66a55d?w=800");
 
         mockCourses.add(sqlCourse);
         mockCourses.add(javaCourse);
 
         // Seed student enrollment for Alice
         mockEnrollments.put("2_1", true);
+        mockEnrollments.put("2_2", true);
     }
 
     public List<Course> getAllCourses() {
         List<Course> list = new ArrayList<>();
-        String sql = "SELECT C.course_id, C.title, C.description, C.instructor_id, U.username AS instructor_name, " +
+        String sql = "SELECT C.course_id, C.title, C.description, C.category, C.banner_url, C.instructor_id, U.username AS instructor_name, " +
                      "C.start_date, C.end_date, C.created_at " +
                      "FROM Courses C LEFT JOIN Users U ON C.instructor_id = U.user_id " +
                      "ORDER BY C.created_at DESC";
@@ -56,7 +61,7 @@ public class CourseDao {
     }
 
     public Course getCourseById(int courseId) {
-        String sql = "SELECT C.course_id, C.title, C.description, C.instructor_id, U.username AS instructor_name, " +
+        String sql = "SELECT C.course_id, C.title, C.description, C.category, C.banner_url, C.instructor_id, U.username AS instructor_name, " +
                      "C.start_date, C.end_date, C.created_at " +
                      "FROM Courses C LEFT JOIN Users U ON C.instructor_id = U.user_id " +
                      "WHERE C.course_id = ?";
@@ -80,7 +85,7 @@ public class CourseDao {
 
     public List<Course> getEnrolledCoursesForStudent(int userId) {
         List<Course> list = new ArrayList<>();
-        String sql = "SELECT C.course_id, C.title, C.description, C.instructor_id, U.username AS instructor_name, " +
+        String sql = "SELECT C.course_id, C.title, C.description, C.category, C.banner_url, C.instructor_id, U.username AS instructor_name, " +
                      "C.start_date, C.end_date, C.created_at " +
                      "FROM Courses C JOIN Enrollments E ON C.course_id = E.course_id " +
                      "LEFT JOIN Users U ON C.instructor_id = U.user_id " +
@@ -165,7 +170,7 @@ public class CourseDao {
     }
 
     private Course mapRowToCourse(ResultSet rs) throws SQLException {
-        return new Course(
+        Course c = new Course(
                 rs.getInt("course_id"),
                 rs.getString("title"),
                 rs.getString("description"),
@@ -174,5 +179,10 @@ public class CourseDao {
                 rs.getDate("end_date"),
                 rs.getTimestamp("created_at")
         );
+        try {
+            c.setCategory(rs.getString("category"));
+            c.setBannerUrl(rs.getString("banner_url"));
+        } catch (Exception ignored) {}
+        return c;
     }
 }

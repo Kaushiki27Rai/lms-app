@@ -10,8 +10,10 @@ public class Course implements Serializable {
     private int courseId;
     private String title;
     private String description;
+    private String category = "Computer Science";
     private int instructorId;
     private String instructorName; // Joined field for display
+    private String bannerUrl = "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800";
     private Date startDate;
     private Date endDate;
     private Timestamp createdAt;
@@ -61,6 +63,14 @@ public class Course implements Serializable {
         this.description = description;
     }
 
+    public String getCategory() {
+        return category != null ? category : "Computer Science";
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
     public int getInstructorId() {
         return instructorId;
     }
@@ -75,6 +85,14 @@ public class Course implements Serializable {
 
     public void setInstructorName(String instructorName) {
         this.instructorName = instructorName;
+    }
+
+    public String getBannerUrl() {
+        return bannerUrl != null ? bannerUrl : "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800";
+    }
+
+    public void setBannerUrl(String bannerUrl) {
+        this.bannerUrl = bannerUrl;
     }
 
     public Date getStartDate() {

@@ -5,7 +5,7 @@
 <%
     User currentUser = (User) session.getAttribute("user");
     if (currentUser == null) {
-        response.sendRedirect(request.getContextPath() + "/auth?action=login");
+        response.sendRedirect(request.getContextPath() + "/auth");
         return;
     }
     List<Course> courses = (List<Course>) request.getAttribute("courses");
@@ -18,84 +18,88 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= pageTitle %> - LMS</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
     <style>
-        body { background-color: #f4f6f9; font-family: 'Segoe UI', sans-serif; }
-        .course-card { border: none; border-radius: 12px; transition: transform 0.2s, box-shadow 0.2s; }
-        .course-card:hover { transform: translateY(-4px); box-shadow: 0 10px 20px rgba(0,0,0,0.08); }
+        .courses-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        .course-card-banner {
+            height: 160px;
+            border-radius: var(--radius-card) var(--radius-card) 0 0;
+            background-size: cover;
+            background-position: center;
+        }
     </style>
 </head>
 <body>
 
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
-        <div class="container">
-            <a class="navbar-brand text-primary fw-bold" href="${pageContext.request.contextPath}/dashboard">
-                <i class="bi bi-journal-bookmark-fill me-2"></i>LMS Platform
+    <div class="app-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <a href="${pageContext.request.contextPath}/dashboard" class="sidebar-brand">
+                <i class="bi bi-book-half"></i> LMS
             </a>
-            <div class="collapse navbar-collapse">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item"><a class="nav-link text-secondary" href="${pageContext.request.contextPath}/dashboard">Dashboard</a></li>
-                    <li class="nav-item"><a class="nav-link active text-white" href="${pageContext.request.contextPath}/courses">Explore Courses</a></li>
-                    <li class="nav-item"><a class="nav-link text-secondary" href="${pageContext.request.contextPath}/courses?action=my-courses">My Courses</a></li>
-                </ul>
-                <div class="d-flex align-items-center gap-3">
-                    <% if ("instructor".equalsIgnoreCase(currentUser.getRole()) || "admin".equalsIgnoreCase(currentUser.getRole())) { %>
-                        <a href="${pageContext.request.contextPath}/courses?action=create" class="btn btn-primary btn-sm">
-                            <i class="bi bi-plus-lg me-1"></i>Create Course
-                        </a>
-                    <% } %>
-                    <span class="text-light small">Hello, <strong><%= currentUser.getUsername() %></strong></span>
-                    <a href="${pageContext.request.contextPath}/auth?action=logout" class="btn btn-outline-danger btn-sm">Logout</a>
+            <ul class="sidebar-nav">
+                <li><a href="${pageContext.request.contextPath}/dashboard" class="sidebar-link"><i class="bi bi-grid-1x2-fill"></i> Dashboard</a></li>
+                <li><a href="${pageContext.request.contextPath}/courses?action=my-courses" class="sidebar-link <%= "My Enrolled Courses".equals(pageTitle) ? "active" : "" %>"><i class="bi bi-journal-bookmark-fill"></i> My Courses</a></li>
+                <li><a href="${pageContext.request.contextPath}/courses" class="sidebar-link <%= "Explore All Courses".equals(pageTitle) ? "active" : "" %>"><i class="bi bi-compass"></i> Explore Courses</a></li>
+                <li><a href="#" class="sidebar-link"><i class="bi bi-gear"></i> Settings</a></li>
+            </ul>
+        </aside>
+
+        <main class="main-content">
+            <!-- Header -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                <div>
+                    <h1 style="font-size: 1.8rem; font-weight: 800;"><%= pageTitle %></h1>
+                    <p style="color: var(--secondary); font-size: 0.95rem;">Master new skills with our curriculum.</p>
                 </div>
-            </div>
-        </div>
-    </nav>
 
-    <div class="container my-5">
-        <div class="d-flex align-items-center justify-content-between mb-4">
-            <div>
-                <h2 class="fw-bold text-dark mb-1"><%= pageTitle %></h2>
-                <p class="text-secondary">Explore and master new skills with our curriculum.</p>
+                <% if ("instructor".equalsIgnoreCase(currentUser.getRole()) || "admin".equalsIgnoreCase(currentUser.getRole())) { %>
+                    <a href="${pageContext.request.contextPath}/courses?action=create" class="btn-lms btn-lms-primary">
+                        <i class="bi bi-plus-lg"></i> Create Course
+                    </a>
+                <% } %>
             </div>
-        </div>
 
-        <% if (request.getParameter("msg") != null && "course_created".equals(request.getParameter("msg"))) { %>
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <i class="bi bi-check-circle-fill me-2"></i>Course created successfully!
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        <% } %>
+            <!-- Dynamic Courses Grid -->
+            <div class="courses-grid">
+                <% if (courses != null && !courses.isEmpty()) {
+                    for (Course c : courses) { %>
+                        <div class="lms-card" style="overflow: hidden;">
+                            <div class="course-card-banner" style="background-image: url('<%= c.getBannerUrl() != null ? c.getBannerUrl() : "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800" %>');"></div>
+                            
+                            <div style="padding: 1.5rem;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                                    <span class="badge-lms badge-student"><%= c.getCategory() %></span>
+                                    <span style="font-size: 0.8rem; color: var(--secondary);"><i class="bi bi-person"></i> <%= c.getInstructorName() != null ? c.getInstructorName() : "Dr. Smith" %></span>
+                                </div>
+                                <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem;"><%= c.getTitle() %></h3>
+                                <p style="color: var(--secondary); font-size: 0.85rem; margin-bottom: 1.25rem; line-height: 1.4;"><%= c.getDescription() %></p>
 
-        <div class="row g-4">
-            <% if (courses != null && !courses.isEmpty()) { 
-                for (Course c : courses) { %>
-                    <div class="col-md-6 col-lg-4">
-                        <div class="card course-card h-100 p-4 bg-white">
-                            <div class="d-flex align-items-center justify-content-between mb-3">
-                                <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill">Course</span>
-                                <span class="text-muted small"><i class="bi bi-person-circle me-1"></i><%= c.getInstructorName() != null ? c.getInstructorName() : "Instructor" %></span>
-                            </div>
-                            <h4 class="fw-bold text-dark mb-2"><%= c.getTitle() %></h4>
-                            <p class="text-secondary small flex-grow-1"><%= c.getDescription() %></p>
-                            <div class="pt-3 border-top d-flex align-items-center justify-content-between">
-                                <span class="text-muted small"><i class="bi bi-calendar3 me-1"></i><%= c.getStartDate() %></span>
-                                <a href="${pageContext.request.contextPath}/courses?action=view&id=<%= c.getCourseId() %>" class="btn btn-outline-primary btn-sm">
-                                    View Details <i class="bi bi-arrow-right ms-1"></i>
-                                </a>
+                                <div style="display: flex; justify-content: space-between; align-items: center; pt-3; border-top: 1px solid var(--border);">
+                                    <span style="font-size: 0.8rem; color: var(--secondary);"><i class="bi bi-calendar3"></i> <%= c.getStartDate() %></span>
+                                    <a href="${pageContext.request.contextPath}/courses?action=view&id=<%= c.getCourseId() %>" class="btn-lms btn-lms-secondary" style="font-size: 0.85rem; padding: 0.4rem 0.9rem;">
+                                        View Course <i class="bi bi-arrow-right"></i>
+                                    </a>
+                                </div>
                             </div>
                         </div>
+                <% } } else { %>
+                    <!-- Empty State -->
+                    <div class="lms-card" style="grid-column: 1 / -1; padding: 4rem; text-align: center;">
+                        <i class="bi bi-journal-x" style="font-size: 3.5rem; color: var(--secondary);"></i>
+                        <h3 style="font-size: 1.25rem; font-weight: 700; margin-top: 1rem;">No Courses Found</h3>
+                        <p style="color: var(--secondary); margin-top: 0.25rem;">No courses available matching your request.</p>
                     </div>
-            <%  } 
-               } else { %>
-                <div class="col-12 text-center py-5">
-                    <i class="bi bi-journal-x text-muted display-4"></i>
-                    <h5 class="text-secondary mt-3">No courses available at the moment.</h5>
-                </div>
-            <% } %>
-        </div>
+                <% } %>
+            </div>
+        </main>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
