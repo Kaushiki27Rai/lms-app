@@ -1,6 +1,11 @@
 package com.lms.controller;
 
+import com.lms.dao.AssignmentDao;
+import com.lms.dao.CourseDao;
+import com.lms.dao.ModuleDao;
+import com.lms.model.Assignment;
 import com.lms.model.Course;
+import com.lms.model.Lesson;
 import com.lms.model.User;
 import com.lms.service.CourseService;
 
@@ -18,10 +23,16 @@ public class CourseServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
     private CourseService courseService;
+    private CourseDao courseDao;
+    private ModuleDao moduleDao;
+    private AssignmentDao assignmentDao;
 
     @Override
     public void init() throws ServletException {
         this.courseService = new CourseService();
+        this.courseDao = new CourseDao();
+        this.moduleDao = new ModuleDao();
+        this.assignmentDao = new AssignmentDao();
     }
 
     @Override
@@ -30,7 +41,7 @@ public class CourseServlet extends HttpServlet {
 
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("user") == null) {
-            response.sendRedirect(request.getContextPath() + "/auth?action=login");
+            response.sendRedirect(request.getContextPath() + "/auth");
             return;
         }
 
@@ -45,8 +56,13 @@ public class CourseServlet extends HttpServlet {
                 int courseId = Integer.parseInt(request.getParameter("id"));
                 Course course = courseService.getCourseDetails(courseId);
                 boolean isEnrolled = courseService.isStudentEnrolled(currentUser.getUserId(), courseId);
+                List<Lesson> modules = moduleDao.getModulesByCourse(courseId);
+                List<Assignment> assignments = assignmentDao.getAssignmentsByCourse(courseId, currentUser.getUserId());
+
                 request.setAttribute("course", course);
                 request.setAttribute("isEnrolled", isEnrolled);
+                request.setAttribute("modules", modules);
+                request.setAttribute("assignments", assignments);
                 request.getRequestDispatcher("/course-detail.jsp").forward(request, response);
                 break;
             case "my-courses":
@@ -78,7 +94,7 @@ public class CourseServlet extends HttpServlet {
 
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("user") == null) {
-            response.sendRedirect(request.getContextPath() + "/auth?action=login");
+            response.sendRedirect(request.getContextPath() + "/auth");
             return;
         }
 

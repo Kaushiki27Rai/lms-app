@@ -32,7 +32,7 @@ public class QuizServlet extends HttpServlet {
 
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("user") == null) {
-            response.sendRedirect(request.getContextPath() + "/auth?action=login");
+            response.sendRedirect(request.getContextPath() + "/auth");
             return;
         }
 
@@ -53,7 +53,7 @@ public class QuizServlet extends HttpServlet {
 
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("user") == null) {
-            response.sendRedirect(request.getContextPath() + "/auth?action=login");
+            response.sendRedirect(request.getContextPath() + "/auth");
             return;
         }
 
@@ -75,6 +75,7 @@ public class QuizServlet extends HttpServlet {
         double score = quizService.evaluateAndSubmit(quizId, currentUser.getUserId(), studentAnswers);
 
         request.setAttribute("quiz", quiz);
+        request.setAttribute("studentAnswers", studentAnswers);
         request.setAttribute("finalScore", score);
         request.setAttribute("quizSubmitted", true);
         request.getRequestDispatcher("/quiz.jsp").forward(request, response);
