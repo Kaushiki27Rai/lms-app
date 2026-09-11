@@ -56,6 +56,15 @@ public class CourseServlet extends HttpServlet {
                 int courseId = Integer.parseInt(request.getParameter("id"));
                 Course course = courseService.getCourseDetails(courseId);
                 boolean isEnrolled = courseService.isStudentEnrolled(currentUser.getUserId(), courseId);
+                boolean isOwner = course != null && course.getInstructorId() == currentUser.getUserId();
+                if ("student".equalsIgnoreCase(currentUser.getRole()) && !isEnrolled) {
+                    response.sendRedirect(request.getContextPath() + "/courses?action=list&error=enrollment_required");
+                    return;
+                }
+                if ("instructor".equalsIgnoreCase(currentUser.getRole()) && !isOwner) {
+                    response.sendError(HttpServletResponse.SC_FORBIDDEN, "You do not own this course.");
+                    return;
+                }
                 List<Lesson> modules = moduleDao.getModulesByCourse(courseId);
                 List<Assignment> assignments = assignmentDao.getAssignmentsByCourse(courseId, currentUser.getUserId());
 
@@ -102,6 +111,10 @@ public class CourseServlet extends HttpServlet {
         String action = request.getParameter("action");
 
         if ("enroll".equalsIgnoreCase(action)) {
+            if (!"student".equalsIgnoreCase(currentUser.getRole())) {
+                response.sendError(HttpServletResponse.SC_FORBIDDEN, "Only students can enroll.");
+                return;
+            }
             int courseId = Integer.parseInt(request.getParameter("courseId"));
             boolean success = courseService.enrollStudent(currentUser.getUserId(), courseId);
             if (success) {
@@ -110,6 +123,10 @@ public class CourseServlet extends HttpServlet {
                 response.sendRedirect(request.getContextPath() + "/courses?action=view&id=" + courseId + "&error=failed");
             }
         } else if ("create".equalsIgnoreCase(action)) {
+            if (!"instructor".equalsIgnoreCase(currentUser.getRole()) && !"admin".equalsIgnoreCase(currentUser.getRole())) {
+                response.sendError(HttpServletResponse.SC_FORBIDDEN, "Only instructors can create courses.");
+                return;
+            }
             String title = request.getParameter("title");
             String description = request.getParameter("description");
             String startDate = request.getParameter("startDate");

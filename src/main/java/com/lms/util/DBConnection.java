@@ -6,9 +6,9 @@ import java.sql.SQLException;
 
 public class DBConnection {
 
-    private static final String URL = "jdbc:mysql://localhost:3306/ManagementSystems?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&connectTimeout=2000";
-    private static final String USER = "root";
-    private static final String PASSWORD = "password";
+    private static final String URL = setting("DB_URL", "jdbc:mysql://localhost:3306/ManagementSystems?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&connectTimeout=2000");
+    private static final String USER = setting("DB_USERNAME", "root");
+    private static final String PASSWORD = setting("DB_PASSWORD", "");
 
     private static boolean driverLoaded = false;
 
@@ -26,5 +26,10 @@ public class DBConnection {
             throw new SQLException("MySQL driver not loaded.");
         }
         return DriverManager.getConnection(URL, USER, PASSWORD);
+    }
+
+    private static String setting(String name, String defaultValue) {
+        String value = System.getenv(name);
+        return value == null || value.trim().isEmpty() ? defaultValue : value.trim();
     }
 }

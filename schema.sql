@@ -206,13 +206,50 @@ CREATE TABLE IF NOT EXISTS LearningSessions (
     FOREIGN KEY (course_id) REFERENCES Courses(course_id) ON DELETE CASCADE
 );
 
+-- AI audit trail. Prediction features remain derivable from source activity tables.
+CREATE TABLE IF NOT EXISTS AiRiskPredictions (
+    prediction_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    student_id INT NOT NULL,
+    course_id INT NULL,
+    risk_level ENUM('LOW','MEDIUM','HIGH') NOT NULL,
+    risk_score DECIMAL(5,4) NOT NULL,
+    confidence DECIMAL(5,4) NOT NULL,
+    model_version VARCHAR(50) NOT NULL,
+    prediction_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (student_id) REFERENCES Users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (course_id) REFERENCES Courses(course_id) ON DELETE SET NULL,
+    INDEX idx_risk_student_date (student_id, prediction_date),
+    INDEX idx_risk_course_level (course_id, risk_level)
+);
+
+CREATE TABLE IF NOT EXISTS AiRecommendations (
+    recommendation_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    student_id INT NOT NULL,
+    recommendation_text TEXT NOT NULL,
+    source VARCHAR(30) NOT NULL DEFAULT 'rules',
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (student_id) REFERENCES Users(user_id) ON DELETE CASCADE,
+    INDEX idx_recommendation_student_created (student_id, created_at)
+);
+
+-- Indexes cover dashboard joins, pagination and time-series aggregates.
+CREATE INDEX idx_courses_instructor_created ON Courses(instructor_id, created_at);
+CREATE INDEX idx_enrollments_user_course ON Enrollments(user_id, course_id);
+CREATE INDEX idx_modules_course_published ON Modules(course_id, published);
+CREATE INDEX idx_assignments_course_due ON Assignments(course_id, due_date);
+CREATE INDEX idx_submissions_student_assignment ON AssignmentSubmissions(student_id, assignment_id);
+CREATE INDEX idx_attendance_student_course_date ON Attendance(student_id, course_id, date);
+CREATE INDEX idx_quiz_submissions_student_date ON QuizSubmissions(student_id, submission_date);
+CREATE INDEX idx_notifications_user_created ON Notifications(user_id, created_at);
+CREATE INDEX idx_learning_sessions_user_created ON LearningSessions(user_id, created_at);
+
 -- Seed Data (Default Instructor & Student)
 INSERT INTO Users (user_id, username, password, email, role, employee_id, department, designation, expertise)
-VALUES (1, 'Dr. Smith', 'securepassword', 'drsmith@example.com', 'instructor', 'EMP-109', 'Computer Science', 'Senior Professor', 'Database Systems & Algorithms')
+VALUES (1, 'Dr. Smith', '$2a$12$.hswgb3ACrBfSOsaErXYL.H46tTdYsRXZB7UH9Nd4r5Legrfc/4K.', 'drsmith@example.com', 'instructor', 'EMP-109', 'Computer Science', 'Senior Professor', 'Database Systems & Algorithms')
 ON DUPLICATE KEY UPDATE username=VALUES(username);
 
 INSERT INTO Users (user_id, username, password, email, role, student_id, department, semester, year)
-VALUES (2, 'Kaushiki Rai', 'password123', 'alice@example.com', 'student', 'STU-2024-88', 'Computer Science', '4th Semester', '2nd Year')
+VALUES (2, 'Kaushiki Rai', '$2a$12$rsVKohOJ/uIqIiN4JbVtFepD3haERv6.lPn2KHOZajxHMWGxS3vCe', 'alice@example.com', 'student', 'STU-2024-88', 'Computer Science', '4th Semester', '2nd Year')
 ON DUPLICATE KEY UPDATE username=VALUES(username);
 
 -- Seed Courses

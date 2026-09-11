@@ -11,6 +11,7 @@ import com.lms.model.Course;
 import com.lms.model.Notification;
 import com.lms.model.QuizSubmission;
 import com.lms.model.User;
+import com.lms.service.AnalyticsService;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -30,6 +31,7 @@ public class DashboardServlet extends HttpServlet {
     private AnnouncementDao announcementDao;
     private NotificationDao notificationDao;
     private QuizDao quizDao;
+    private AnalyticsService analyticsService;
 
     @Override
     public void init() throws ServletException {
@@ -38,6 +40,7 @@ public class DashboardServlet extends HttpServlet {
         this.announcementDao = new AnnouncementDao();
         this.notificationDao = new NotificationDao();
         this.quizDao = new QuizDao();
+        this.analyticsService = new AnalyticsService();
     }
 
     @Override
@@ -75,7 +78,8 @@ public class DashboardServlet extends HttpServlet {
             avgScore = Math.round((total / submissions.size()) * 10.0) / 10.0;
         }
 
-        double overallCompletion = 76.0;
+        java.util.Map<String, Object> analytics = analyticsService.getStudentMetrics(user.getUserId());
+        double overallCompletion = (Double) analytics.get("courseCompletionPercentage");
         if (!enrolledCourses.isEmpty()) {
             // Find latest course for Continue Learning section
             Course continueCourse = enrolledCourses.get(0);
@@ -91,8 +95,9 @@ public class DashboardServlet extends HttpServlet {
         request.setAttribute("unreadCount", unreadNotifications);
         request.setAttribute("avgScore", avgScore);
         request.setAttribute("overallCompletion", overallCompletion);
-        request.setAttribute("weeklyHours", "14.2");
-        request.setAttribute("attendancePercent", "96.5%");
+        request.setAttribute("weeklyHours", analytics.get("weeklyLearningHours"));
+        request.setAttribute("attendancePercent", analytics.get("attendancePercentage") + "%");
+        request.setAttribute("analytics", analytics);
 
         request.getRequestDispatcher("/student-dashboard.jsp").forward(request, response);
     }

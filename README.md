@@ -1,87 +1,53 @@
-# 🎓 LMS — Learn Smarter. Teach Better.
+# LMS Intelligence
 
-> **A minimal, modern, role-based Learning Management System inspired by Notion, Linear, Apple Education, and Canvas.**
+An enterprise-style learning management system built by extending the original Java Servlet/JSP LMS. It combines course delivery, submissions and quizzes with measurable learning analytics and an explainable student-risk workflow.
 
----
+## What it demonstrates
 
-## 🎨 Design Philosophy & UX Standards
+- **Students:** authentication, course enrollment, modules, assignments, secure file submissions, quizzes, notifications, progress, and database-backed analytics.
+- **Instructors:** course creation and role-aware dashboard workflows; the API exposes student analytics, risk signals and interventions for an AI insights view.
+- **Engineering:** layered controller/service/DAO flow, prepared SQL, BCrypt password hashing, session authorization, DTO-shaped JSON responses, aggregate queries, indexes, Docker Compose, and a separately deployable ML API.
 
-* **100% Dynamic & Zero Hardcoded Data**: All student profile details, enrolled courses, upcoming assignments, course progress, quiz options, announcements, and notifications are dynamically rendered via Servlets, DAOs, Services, and MySQL.
-* **Role-Based Workspaces**:
-  * 🎒 **Student Hub**: Dashboard-first experience ("What should I do today?") featuring progress rings, upcoming assignment timelines, and recent announcements.
-  * 👨‍🏫 **Instructor Hub**: Focused on class schedules, pending grading queues, quick actions, and student risk alerts.
-* **Apple & Linear Style Guide**:
-  * Primary: `#2563EB` (Linear Blue)
-  * Background: `#F8FAFC` (Apple Slate)
-  * Accent: `#10B981` (Emerald Green)
-  * Border Radius: `18px` Cards, `12px` Buttons, `10px` Inputs.
-  * Soft Shadows (`0 8px 30px rgba(0,0,0,0.06)`) and Glassmorphism cards.
+## Architecture
 
----
-
-## 🛠 Refactored Student Module Highlights
-
-1. **Dynamic Dashboard (`student-dashboard.jsp`)**:
-   * Hello `${currentUser.username}` header with department and semester badges.
-   * Dynamic Continue Learning card fetching latest enrolled course and progress.
-   * Live learning analytics (Weekly hours, Attendance %, Average score %, Completion %).
-   * Dynamic announcements loop and upcoming assignments list sorted by due date (`due_date ASC`).
-   * Working notification bell with unread counter.
-
-2. **Quiz System Fix (`quiz.jsp` & `QuizServlet.java`)**:
-   * Fixed radio button selection bug by using unique radio button group names per question (`name="q_${questionId}"`).
-   * Clicking anywhere on an option card highlights and selects the option.
-   * Calculates actual score percentage, persists `QuizSubmission` in database, and renders a detailed Question-by-Question Review showing correct vs. incorrect answers.
-
-3. **Tabbed Course Learning Hub & Assignments (`course-detail.jsp` & `AssignmentServlet.java`)**:
-   * Modules & Syllabus with expandable video/notes accordions.
-   * Multipart file upload form handled by `@WebServlet("/assignments")` controller (`AssignmentServlet.java`).
-   * Tracks submission records and updates assignment status badges (*Pending*, *Submitted*, *Overdue*, *Graded*).
-
-4. **Multi-Step Signup Wizard (`signup.jsp`)**:
-   * 3-Step interactive onboarding collecting role-specific details (Student ID, Department, Semester, Year vs. Employee ID, Designation, Expertise).
-
----
-
-## 🏗 Technical Architecture & Database Schema
-
-```
-lms-app/
-├── schema.sql                       # MySQL schema (Users, Courses, Enrollments, Modules, Assignments, AssignmentSubmissions, Quizzes, Questions, QuizSubmissions, Announcements, Notifications, Discussions, LearningSessions)
-├── pom.xml                          # Maven build dependencies & Jetty plugin
-├── run.sh                           # 1-Click launcher script
-├── src/main/webapp/
-│   ├── css/style.css                # Notion/Linear/Apple design system tokens
-│   ├── landing.jsp                  # Clean landing page
-│   ├── login.jsp                    # Glassmorphism login page
-│   ├── signup.jsp                   # 3-step interactive signup wizard
-│   ├── student-dashboard.jsp        # Dynamic Student Dashboard
-│   ├── instructor-dashboard.jsp     # Instructor Management Hub
-│   ├── courses.jsp                  # Course Catalog
-│   ├── course-detail.jsp            # Course Hub & Syllabus
-│   ├── create-course.jsp            # Course Publisher
-│   └── quiz.jsp                     # Interactive Quiz Player & Review
-└── src/main/java/com/lms/
-    ├── model/                       # Domain Entities (User, Course, Module, Assignment, AssignmentSubmission, Quiz, Question, QuizSubmission, Announcement, Notification)
-    ├── util/                        # DBConnection & PasswordUtils
-    ├── dao/                         # Data Access Objects (UserDao, CourseDao, QuizDao, AssignmentDao, AnnouncementDao, NotificationDao, ModuleDao)
-    ├── service/                     # ViewModels & Services (UserService, CourseService, QuizService)
-    └── controller/                  # Servlet Controllers (LandingServlet, AuthServlet, DashboardServlet, CourseServlet, QuizServlet, AssignmentServlet)
+```text
+JSP web client / future mobile client
+              | session REST/JSON
+Java Servlets -> Services -> DAO/JDBC -> MySQL
+              | HTTP
+          FastAPI -> Random Forest risk model
 ```
 
----
+## Run locally
 
-## 🚀 How to Run
+1. Create MySQL database and load `schema.sql`.
+2. Copy `.env.example` values into your shell (do not commit credentials): `export DB_PASSWORD='...' ML_SERVICE_URL=http://localhost:8001`.
+3. Start ML service: `cd ml-service && python -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt && python model/train_model.py && uvicorn app:app --port 8001`.
+4. In another terminal: `mvn jetty:run` and open `http://localhost:8080`.
 
-1. **Start the Application**:
-   ```bash
-   ./run.sh
-   ```
-2. **Open in Browser**:
-   * Landing: `http://localhost:8080/`
-   * Login: `http://localhost:8080/login`
-   * Signup: `http://localhost:8080/signup`
+Or use `docker compose up --build`. Seed password hashes use BCrypt; create your own account through signup for local use. Replace all demonstration users in a real deployment.
 
-3. **Demo Accounts**:
-   * **Student**: `alice@example.com` / `password123`
-   * **Instructor**: `drsmith@example.com` / `securepassword`
+## AI risk prediction
+
+The FastAPI service accepts attendance, quiz score, assignment submission rate/score, completion, missed assignments, attempts, weekly hours and recent activity. It returns LOW/MEDIUM/HIGH risk, confidence and transparent contributing factors. Java obtains the features with SQL aggregation, calls `/predict`, and falls back to transparent rule-based advice only if the ML service is unavailable. The starter model trains on explicitly synthetic data; its printed precision/recall/F1/confusion matrix are demonstration diagnostics, not production accuracy. Real use needs consented historical labels, bias checks, monitoring, and human review.
+
+## Key endpoints
+
+See [docs/API.md](docs/API.md). Core examples: `/api/auth/login`, `/api/courses`, `/api/students/{id}/dashboard`, `/api/ai/risk/{id}`, and `/api/ai/recommendations/{id}`.
+
+## Interview talking points
+
+1. Preserved a servlet/JSP product while adding mobile-ready REST boundaries.
+2. Kept business logic in services and database access in DAOs.
+3. Used SQL aggregates and composite indexes for dashboard-scale queries.
+4. Enforced server-side ownership checks rather than trusting URL IDs.
+5. Migrated password security with BCrypt while retaining legacy-row compatibility.
+6. Stored uploaded files using generated names and allow-listed extensions.
+7. Chose an interpretable, independently deployable Random Forest service.
+8. Made ML failure non-fatal with clearly labelled data-derived fallback advice.
+9. Kept prediction features derived from activity data and retained an audit-table design.
+10. Containerized MySQL, Java, and Python services for repeatable deployment.
+
+## Known limits
+
+The current ML model is synthetic and should not drive automated academic decisions. The REST layer is session-based (a mobile production deployment should add short-lived tokens/CSRF protection), instructor risk cohort UI needs further product work, and legacy JSP output should be migrated to JSTL escaping for complete XSS hardening.

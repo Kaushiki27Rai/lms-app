@@ -104,9 +104,22 @@ public class UserDao {
         if (email == null || password == null) return null;
         User user = findByEmail(email);
         if (user != null && PasswordUtils.verifyPassword(password, user.getPassword())) {
+            if (PasswordUtils.needsUpgrade(user.getPassword())) {
+                updatePassword(user.getUserId(), password);
+                user.setPassword(PasswordUtils.hashPassword(password));
+            }
             return user;
         }
         return null;
+    }
+
+    private void updatePassword(int userId, String rawPassword) {
+        String sql = "UPDATE Users SET password = ? WHERE user_id = ?";
+        try (Connection conn = DBConnection.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, PasswordUtils.hashPassword(rawPassword));
+            ps.setInt(2, userId);
+            ps.executeUpdate();
+        } catch (SQLException ignored) { /* fallback accounts are already held only in memory */ }
     }
 
     public List<User> getAllUsers() {

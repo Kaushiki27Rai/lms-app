@@ -12,8 +12,12 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.servlet.http.Part;
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.util.Set;
+import java.util.UUID;
 
 @WebServlet("/assignments")
 @MultipartConfig(
@@ -49,15 +53,21 @@ public class AssignmentServlet extends HttpServlet {
 
         User currentUser = (User) session.getAttribute("user");
         String assignmentIdStr = request.getParameter("assignmentId");
-        int assignmentId = assignmentIdStr != null ? Integer.parseInt(assignmentIdStr) : 1;
-
-        String fileName = "submitted_document.pdf";
+        if (!"student".equalsIgnoreCase(currentUser.getRole()) || assignmentIdStr == null) { response.sendError(403); return; }
+        int assignmentId;
+        try { assignmentId = Integer.parseInt(assignmentIdStr); } catch (NumberFormatException e) { response.sendError(400, "Invalid assignment"); return; }
+        String fileName;
         try {
             Part filePart = request.getPart("submissionFile");
-            if (filePart != null && filePart.getSubmittedFileName() != null) {
-                fileName = filePart.getSubmittedFileName();
-            }
-        } catch (Exception ignored) {}
+            if (filePart == null || filePart.getSize() == 0) { response.sendError(400, "A file is required"); return; }
+            String original = Path.of(filePart.getSubmittedFileName()).getFileName().toString();
+            String extension = original.contains(".") ? original.substring(original.lastIndexOf('.')).toLowerCase() : "";
+            if (!Set.of(".pdf", ".doc", ".docx", ".zip").contains(extension)) { response.sendError(400, "Unsupported file type"); return; }
+            fileName = UUID.randomUUID() + extension;
+            Path uploadRoot = Path.of(System.getenv().getOrDefault("UPLOAD_DIR", System.getProperty("java.io.tmpdir") + "/lms-uploads"));
+            Files.createDirectories(uploadRoot);
+            Files.copy(filePart.getInputStream(), uploadRoot.resolve(fileName), StandardCopyOption.REPLACE_EXISTING);
+        } catch (Exception e) { response.sendError(400, "Unable to process upload"); return; }
 
         AssignmentSubmission sub = new AssignmentSubmission();
         sub.setAssignmentId(assignmentId);

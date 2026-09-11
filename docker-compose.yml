@@ -1,0 +1,22 @@
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: ManagementSystems
+      MYSQL_USER: lms_user
+      MYSQL_PASSWORD: change_me
+      MYSQL_ROOT_PASSWORD: root_change_me
+    volumes: [mysql-data:/var/lib/mysql, ./schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro]
+  ml-service:
+    build: ./ml-service
+    ports: ["8001:8001"]
+  lms-backend:
+    build: .
+    ports: ["8080:8080"]
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/ManagementSystems?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      DB_USERNAME: lms_user
+      DB_PASSWORD: change_me
+      ML_SERVICE_URL: http://ml-service:8001
+    depends_on: [mysql, ml-service]
+volumes: {mysql-data: {}}
