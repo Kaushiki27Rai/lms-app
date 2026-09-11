@@ -8,7 +8,8 @@
   <name>lms-web-app Maven Webapp</name>
   <url>http://maven.apache.org</url>
   <properties>
-      <maven.compiler.release>25</maven.compiler.release>
+      <!-- Jetty 9's ASM scanner cannot read Java 25/26 class files. Keep deployable bytecode on Java 21 LTS. -->
+      <maven.compiler.release>21</maven.compiler.release>
     </properties>
   <dependencies>
     <dependency>

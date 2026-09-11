@@ -20,6 +20,27 @@ CREATE TABLE IF NOT EXISTS Users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Migration for installations created before instructor metadata was added.
+-- CREATE TABLE IF NOT EXISTS does not alter an existing Users table. MySQL's
+-- ALTER TABLE support differs by version, so use information_schema checks.
+SET @employee_id_exists := (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'Users' AND COLUMN_NAME = 'employee_id');
+SET @employee_id_sql := IF(@employee_id_exists = 0, 'ALTER TABLE Users ADD COLUMN employee_id VARCHAR(50) AFTER year', 'SELECT 1');
+PREPARE add_employee_id FROM @employee_id_sql;
+EXECUTE add_employee_id;
+DEALLOCATE PREPARE add_employee_id;
+
+SET @designation_exists := (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'Users' AND COLUMN_NAME = 'designation');
+SET @designation_sql := IF(@designation_exists = 0, 'ALTER TABLE Users ADD COLUMN designation VARCHAR(100) AFTER employee_id', 'SELECT 1');
+PREPARE add_designation FROM @designation_sql;
+EXECUTE add_designation;
+DEALLOCATE PREPARE add_designation;
+
+SET @expertise_exists := (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'Users' AND COLUMN_NAME = 'expertise');
+SET @expertise_sql := IF(@expertise_exists = 0, 'ALTER TABLE Users ADD COLUMN expertise VARCHAR(255) AFTER designation', 'SELECT 1');
+PREPARE add_expertise FROM @expertise_sql;
+EXECUTE add_expertise;
+DEALLOCATE PREPARE add_expertise;
+
 -- 2. Courses Table
 CREATE TABLE IF NOT EXISTS Courses (
     course_id INT PRIMARY KEY AUTO_INCREMENT,
