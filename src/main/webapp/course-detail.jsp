@@ -167,11 +167,13 @@
                                 </div>
                                 <p style="color: var(--secondary); font-size: 0.9rem; margin-bottom: 1rem;"><%= a.getInstructions() %></p>
                                 
-                                <form action="${pageContext.request.contextPath}/assignments" method="POST" enctype="multipart/form-data" style="display: flex; gap: 1rem; align-items: center;">
-                                    <input type="hidden" name="assignmentId" value="<%= a.getAssignmentId() %>">
-                                    <input type="file" name="submissionFile" class="lms-input" style="max-width: 320px;" required>
-                                    <button type="submit" class="btn-lms btn-lms-primary">Submit Work</button>
-                                </form>
+                                <% if ("student".equalsIgnoreCase(currentUser.getRole())) { %>
+                                    <form action="${pageContext.request.contextPath}/assignments" method="POST" enctype="multipart/form-data" style="display: flex; gap: 1rem; align-items: center;">
+                                        <input type="hidden" name="assignmentId" value="<%= a.getAssignmentId() %>">
+                                        <input type="file" name="submissionFile" accept=".pdf,.doc,.docx,.zip" class="lms-input" style="max-width: 320px;" required>
+                                        <button type="submit" class="btn-lms btn-lms-primary">Submit Work</button>
+                                    </form>
+                                <% } %>
                             </div>
                     <% } } else { %>
                         <div class="lms-card" style="padding: 2.5rem; text-align: center; color: var(--secondary);">

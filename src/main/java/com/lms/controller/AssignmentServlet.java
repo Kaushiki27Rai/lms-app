@@ -54,8 +54,10 @@ public class AssignmentServlet extends HttpServlet {
         User currentUser = (User) session.getAttribute("user");
         String assignmentIdStr = request.getParameter("assignmentId");
         if (!"student".equalsIgnoreCase(currentUser.getRole()) || assignmentIdStr == null) { response.sendError(403); return; }
-        int assignmentId;
-        try { assignmentId = Integer.parseInt(assignmentIdStr); } catch (NumberFormatException e) { response.sendError(400, "Invalid assignment"); return; }
+        int assignmentId = com.lms.util.RequestUtils.positiveInt(assignmentIdStr);
+        if (assignmentId < 1) { response.sendError(400, "Invalid assignment"); return; }
+        Integer courseId = assignmentDao.courseIdForStudentAssignment(assignmentId, currentUser.getUserId());
+        if (courseId == null) { response.sendError(403, "You cannot submit work for this assignment."); return; }
         String fileName;
         try {
             Part filePart = request.getPart("submissionFile");
@@ -75,8 +77,8 @@ public class AssignmentServlet extends HttpServlet {
         sub.setSubmittedFile(fileName);
         sub.setComments("Submitted via online student portal");
 
-        assignmentDao.submitAssignment(sub);
+        if (!assignmentDao.submitAssignment(sub)) { response.sendError(500, "Submission could not be saved."); return; }
 
-        response.sendRedirect(request.getContextPath() + "/courses?action=view&id=1&msg=assignment_submitted");
+        response.sendRedirect(request.getContextPath() + "/courses?action=view&id=" + courseId + "&msg=assignment_submitted");
     }
 }

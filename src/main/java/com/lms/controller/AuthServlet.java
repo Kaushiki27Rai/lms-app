@@ -71,7 +71,13 @@ public class AuthServlet extends HttpServlet {
         
         String role = request.getParameter("role");
         if (role == null || role.trim().isEmpty()) role = "student";
-        newUser.setRole(role.toLowerCase());
+        role = role.trim().toLowerCase();
+        if (!"student".equals(role) && !"instructor".equals(role)) {
+            request.setAttribute("errorMessage", "Please select a valid account type.");
+            request.getRequestDispatcher("/signup.jsp").forward(request, response);
+            return;
+        }
+        newUser.setRole(role); // public registration must never create administrators
 
         if ("instructor".equalsIgnoreCase(role)) {
             newUser.setEmployeeId(request.getParameter("employeeId"));
@@ -106,6 +112,8 @@ public class AuthServlet extends HttpServlet {
         User user = userService.login(email, password);
 
         if (user != null) {
+            HttpSession oldSession = request.getSession(false);
+            if (oldSession != null) oldSession.invalidate(); // prevent session fixation on login
             HttpSession session = request.getSession(true);
             session.setAttribute("user", user);
             session.setAttribute("userRole", user.getRole());

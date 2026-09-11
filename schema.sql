@@ -97,7 +97,8 @@ CREATE TABLE IF NOT EXISTS AssignmentSubmissions (
     feedback TEXT,
     submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (assignment_id) REFERENCES Assignments(assignment_id) ON DELETE CASCADE,
-    FOREIGN KEY (student_id) REFERENCES Users(user_id) ON DELETE CASCADE
+    FOREIGN KEY (student_id) REFERENCES Users(user_id) ON DELETE CASCADE,
+    UNIQUE KEY unique_assignment_student (assignment_id, student_id)
 );
 
 -- 8. Attendance Table

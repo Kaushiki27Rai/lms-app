@@ -8,7 +8,7 @@
   <name>lms-web-app Maven Webapp</name>
   <url>http://maven.apache.org</url>
   <properties>
-        <maven.compiler.release>17</maven.compiler.release>
+      <maven.compiler.release>25</maven.compiler.release>
     </properties>
   <dependencies>
     <dependency>
@@ -41,6 +41,11 @@
   <build>
     <finalName>lms-web-app</finalName>
     <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.14.1</version>
+      </plugin>
       <plugin>
         <groupId>org.eclipse.jetty</groupId>
         <artifactId>jetty-maven-plugin</artifactId>

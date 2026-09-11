@@ -105,7 +105,7 @@ public class AssignmentDao {
 
     public boolean submitAssignment(AssignmentSubmission sub) {
         String sql = "INSERT INTO AssignmentSubmissions (assignment_id, student_id, submitted_file, comments, submitted_at) " +
-                     "VALUES (?, ?, ?, ?, NOW())";
+                     "VALUES (?, ?, ?, ?, NOW()) ON DUPLICATE KEY UPDATE submitted_file=VALUES(submitted_file), comments=VALUES(comments), submitted_at=NOW()";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
@@ -116,8 +116,16 @@ public class AssignmentDao {
 
             return ps.executeUpdate() > 0;
         } catch (Exception e) {
-            return true;
+            return false;
         }
+    }
+
+    public Integer courseIdForStudentAssignment(int assignmentId, int studentId) {
+        String sql = "SELECT a.course_id FROM Assignments a JOIN Enrollments e ON e.course_id=a.course_id WHERE a.assignment_id=? AND e.user_id=?";
+        try (Connection conn=DBConnection.getConnection(); PreparedStatement ps=conn.prepareStatement(sql)) {
+            ps.setInt(1, assignmentId); ps.setInt(2, studentId);
+            try (ResultSet rs=ps.executeQuery()) { return rs.next() ? rs.getInt(1) : null; }
+        } catch (Exception e) { return null; }
     }
 
     private Assignment mapRowToAssignment(ResultSet rs) throws Exception {

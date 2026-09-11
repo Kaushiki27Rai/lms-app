@@ -15,6 +15,7 @@
 /Users/kaushikirai/Documents/Java Project/lms-app/src/main/java/com/lms/dao/QuizDao.java
 /Users/kaushikirai/Documents/Java Project/lms-app/src/main/java/com/lms/dao/UserDao.java
 /Users/kaushikirai/Documents/Java Project/lms-app/src/main/java/com/lms/dto/ApiResponse.java
+/Users/kaushikirai/Documents/Java Project/lms-app/src/main/java/com/lms/filter/SecurityHeadersFilter.java
 /Users/kaushikirai/Documents/Java Project/lms-app/src/main/java/com/lms/model/Announcement.java
 /Users/kaushikirai/Documents/Java Project/lms-app/src/main/java/com/lms/model/Assignment.java
 /Users/kaushikirai/Documents/Java Project/lms-app/src/main/java/com/lms/model/AssignmentSubmission.java
@@ -33,3 +34,4 @@
 /Users/kaushikirai/Documents/Java Project/lms-app/src/main/java/com/lms/util/DBConnection.java
 /Users/kaushikirai/Documents/Java Project/lms-app/src/main/java/com/lms/util/JsonUtil.java
 /Users/kaushikirai/Documents/Java Project/lms-app/src/main/java/com/lms/util/PasswordUtils.java
+/Users/kaushikirai/Documents/Java Project/lms-app/src/main/java/com/lms/util/RequestUtils.java

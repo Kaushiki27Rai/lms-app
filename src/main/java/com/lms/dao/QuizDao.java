@@ -105,6 +105,15 @@ public class QuizDao {
         }
     }
 
+    public Integer getCourseIdForQuiz(int quizId) {
+        String sql = "SELECT course_id FROM Quizzes WHERE quiz_id = ?";
+        try (Connection conn=DBConnection.getConnection(); PreparedStatement ps=conn.prepareStatement(sql)) {
+            ps.setInt(1, quizId); try(ResultSet rs=ps.executeQuery()) { return rs.next() ? rs.getInt(1) : null; }
+        } catch (Exception e) {
+            return mockQuizzes.stream().filter(q -> q.getQuizId() == quizId).map(Quiz::getCourseId).findFirst().orElse(null);
+        }
+    }
+
     public boolean saveSubmission(QuizSubmission submission) {
         String sql = "INSERT INTO QuizSubmissions (quiz_id, student_id, score, submission_date) VALUES (?, ?, ?, NOW())";
         try (Connection conn = DBConnection.getConnection();

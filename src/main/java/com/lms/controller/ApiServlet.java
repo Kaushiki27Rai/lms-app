@@ -21,7 +21,7 @@ public class ApiServlet extends HttpServlet {
     private final UserService users = new UserService();
     @Override protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String path = req.getPathInfo() == null ? "" : req.getPathInfo();
-        if ("/courses".equals(path)) { List<Map<String,Object>> data=new ArrayList<>(); for(com.lms.model.Course c:courses.getAllCourses()) data.add(Map.of("id",c.getCourseId(),"title",c.getTitle(),"description",c.getDescription(),"category",c.getCategory())); write(resp,200,ApiResponse.ok("Courses retrieved successfully",data)); return; }
+        if ("/courses".equals(path)) { List<Map<String,Object>> data=new ArrayList<>(); for(com.lms.model.Course c:courses.getAllCourses()) { Map<String,Object> course=new LinkedHashMap<>(); course.put("id",c.getCourseId()); course.put("title",c.getTitle()); course.put("description",c.getDescription()); course.put("category",c.getCategory()); data.add(course); } write(resp,200,ApiResponse.ok("Courses retrieved successfully",data)); return; }
         User current = current(req); if (current == null) { write(resp,401,ApiResponse.error("Authentication required")); return; }
         if (path.matches("/students/\\d+/dashboard") || path.matches("/analytics/student/\\d+")) {
             int id=id(path); if (!ownsOrInstructor(current,id)) { forbidden(resp); return; }
@@ -35,18 +35,20 @@ public class ApiServlet extends HttpServlet {
         String path=req.getPathInfo()==null?"":req.getPathInfo();
         if ("/auth/login".equals(path)) {
             String body=new String(req.getInputStream().readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+            if (body.length() > 4096) { write(resp,400,ApiResponse.error("Request body is too large")); return; }
             User user=users.login(JsonUtil.field(body,"email"),JsonUtil.field(body,"password"));
             if(user==null){write(resp,401,ApiResponse.error("Invalid email address or password"));return;}
+            HttpSession previous=req.getSession(false); if(previous!=null) previous.invalidate();
             req.getSession(true).setAttribute("user",user); req.getSession().setAttribute("userRole",user.getRole());
             write(resp,200,ApiResponse.ok("Login successful",safeUser(user))); return;
         }
         User current=current(req); if(current==null){write(resp,401,ApiResponse.error("Authentication required"));return;}
-        if(path.matches("/courses/\\d+/enroll")) { if(!"student".equalsIgnoreCase(current.getRole())){forbidden(resp);return;} int course=id(path); boolean enrolled=courses.enrollStudent(current.getUserId(),course); write(resp,enrolled?201:400,enrolled?ApiResponse.ok("Enrollment successful",Map.of("courseId",course)):ApiResponse.error("Enrollment failed")); return; }
+        if(path.matches("/courses/\\d+/enroll")) { if(!"student".equalsIgnoreCase(current.getRole())){forbidden(resp);return;} int course=id(path); if(course<1 || courses.getCourseDetails(course)==null){write(resp,404,ApiResponse.error("Course not found"));return;} boolean enrolled=courses.enrollStudent(current.getUserId(),course); write(resp,enrolled?201:400,enrolled?ApiResponse.ok("Enrollment successful",Map.of("courseId",course)):ApiResponse.error("Enrollment failed")); return; }
         write(resp,404,ApiResponse.error("API resource not found"));
     }
     private User current(HttpServletRequest r){HttpSession s=r.getSession(false);return s==null?null:(User)s.getAttribute("user");}
     private boolean ownsOrInstructor(User u,int id){return u.getUserId()==id || "admin".equalsIgnoreCase(u.getRole()) || ("instructor".equalsIgnoreCase(u.getRole()) && analytics.instructorOwnsStudent(u.getUserId(), id));}
-    private int id(String path){String[] p=path.split("/");return Integer.parseInt(p[p.length-1].matches("\\d+")?p[p.length-1]:p[p.length-2]);}
+    private int id(String path){String[] p=path.split("/");return com.lms.util.RequestUtils.positiveInt(p[p.length-1].matches("\\d+")?p[p.length-1]:p[p.length-2]);}
     private Map<String,Object> safeUser(User u){return Map.of("id",u.getUserId(),"name",u.getUsername(),"email",u.getEmail(),"role",u.getRole());}
     private void forbidden(HttpServletResponse r)throws IOException{write(r,403,ApiResponse.error("You are not authorized to access this resource"));}
     private void write(HttpServletResponse r,int status,ApiResponse<?> body)throws IOException{r.setStatus(status);r.setContentType("application/json;charset=UTF-8");Map<String,Object> payload=new LinkedHashMap<>();payload.put("success",body.success);payload.put("message",body.message);payload.put("data",body.data);r.getWriter().write(JsonUtil.value(payload));}

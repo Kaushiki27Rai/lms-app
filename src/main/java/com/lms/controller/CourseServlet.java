@@ -8,6 +8,7 @@ import com.lms.model.Course;
 import com.lms.model.Lesson;
 import com.lms.model.User;
 import com.lms.service.CourseService;
+import com.lms.util.RequestUtils;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -53,8 +54,10 @@ public class CourseServlet extends HttpServlet {
 
         switch (action) {
             case "view":
-                int courseId = Integer.parseInt(request.getParameter("id"));
+                int courseId = RequestUtils.positiveInt(request.getParameter("id"));
+                if (courseId < 1) { response.sendError(HttpServletResponse.SC_BAD_REQUEST, "A valid course id is required."); return; }
                 Course course = courseService.getCourseDetails(courseId);
+                if (course == null) { response.sendError(HttpServletResponse.SC_NOT_FOUND, "Course not found."); return; }
                 boolean isEnrolled = courseService.isStudentEnrolled(currentUser.getUserId(), courseId);
                 boolean isOwner = course != null && course.getInstructorId() == currentUser.getUserId();
                 if ("student".equalsIgnoreCase(currentUser.getRole()) && !isEnrolled) {
@@ -115,7 +118,8 @@ public class CourseServlet extends HttpServlet {
                 response.sendError(HttpServletResponse.SC_FORBIDDEN, "Only students can enroll.");
                 return;
             }
-            int courseId = Integer.parseInt(request.getParameter("courseId"));
+            int courseId = RequestUtils.positiveInt(request.getParameter("courseId"));
+            if (courseId < 1 || courseService.getCourseDetails(courseId) == null) { response.sendError(HttpServletResponse.SC_NOT_FOUND, "Course not found."); return; }
             boolean success = courseService.enrollStudent(currentUser.getUserId(), courseId);
             if (success) {
                 response.sendRedirect(request.getContextPath() + "/courses?action=view&id=" + courseId + "&msg=enrolled");

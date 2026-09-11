@@ -4,6 +4,9 @@ import com.lms.model.Question;
 import com.lms.model.Quiz;
 import com.lms.model.User;
 import com.lms.service.QuizService;
+import com.lms.dao.CourseDao;
+import com.lms.dao.QuizDao;
+import com.lms.util.RequestUtils;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -20,10 +23,14 @@ public class QuizServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
     private QuizService quizService;
+    private QuizDao quizDao;
+    private CourseDao courseDao;
 
     @Override
     public void init() throws ServletException {
         this.quizService = new QuizService();
+        this.quizDao = new QuizDao();
+        this.courseDao = new CourseDao();
     }
 
     @Override
@@ -38,7 +45,12 @@ public class QuizServlet extends HttpServlet {
 
         String action = request.getParameter("action");
         if ("take".equalsIgnoreCase(action)) {
-            int quizId = Integer.parseInt(request.getParameter("id"));
+            User currentUser = (User) session.getAttribute("user");
+            int quizId = RequestUtils.positiveInt(request.getParameter("id"));
+            if (quizId < 1) { response.sendError(400, "Invalid quiz id"); return; }
+            Integer courseId = quizDao.getCourseIdForQuiz(quizId);
+            if (courseId == null) { response.sendError(404, "Quiz not found"); return; }
+            if (!"student".equalsIgnoreCase(currentUser.getRole()) || !courseDao.isStudentEnrolled(currentUser.getUserId(), courseId)) { response.sendError(403, "You are not enrolled in this quiz's course."); return; }
             Quiz quiz = quizService.getQuizDetails(quizId);
             request.setAttribute("quiz", quiz);
             request.getRequestDispatcher("/quiz.jsp").forward(request, response);
@@ -58,7 +70,11 @@ public class QuizServlet extends HttpServlet {
         }
 
         User currentUser = (User) session.getAttribute("user");
-        int quizId = Integer.parseInt(request.getParameter("quizId"));
+        if (!"student".equalsIgnoreCase(currentUser.getRole())) { response.sendError(403); return; }
+        int quizId = RequestUtils.positiveInt(request.getParameter("quizId"));
+        Integer courseId = quizDao.getCourseIdForQuiz(quizId);
+        if (quizId < 1 || courseId == null) { response.sendError(404, "Quiz not found"); return; }
+        if (!courseDao.isStudentEnrolled(currentUser.getUserId(), courseId)) { response.sendError(403, "You are not enrolled in this quiz's course."); return; }
 
         Quiz quiz = quizService.getQuizDetails(quizId);
         Map<Integer, String> studentAnswers = new HashMap<>();

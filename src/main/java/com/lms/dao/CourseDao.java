@@ -80,7 +80,7 @@ public class CourseDao {
         } catch (Exception e) {
             // Fallback
         }
-        return mockCourses.stream().filter(c -> c.getCourseId() == courseId).findFirst().orElse(mockCourses.get(0));
+        return mockCourses.stream().filter(c -> c.getCourseId() == courseId).findFirst().orElse(null);
     }
 
     public List<Course> getEnrolledCoursesForStudent(int userId) {

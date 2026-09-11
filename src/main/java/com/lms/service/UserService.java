@@ -22,8 +22,11 @@ public class UserService {
         if (newUser.getEmail() == null || !newUser.getEmail().matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
             return "Please enter a valid email address.";
         }
-        if (newUser.getPassword() == null || newUser.getPassword().length() < 6) {
-            return "Password must be at least 6 characters long.";
+        if (newUser.getPassword() == null || newUser.getPassword().length() < 8) {
+            return "Password must be at least 8 characters long.";
+        }
+        if (!"student".equalsIgnoreCase(newUser.getRole()) && !"instructor".equalsIgnoreCase(newUser.getRole())) {
+            return "Invalid account type.";
         }
 
         if (userDao.existsByEmail(newUser.getEmail().trim())) {

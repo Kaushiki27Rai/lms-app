@@ -69,7 +69,7 @@ public class DashboardServlet extends HttpServlet {
         List<QuizSubmission> submissions = quizDao.getStudentSubmissions(user.getUserId());
 
         // Calculate dynamic analytics
-        double avgScore = 88.5;
+        double avgScore = 0.0;
         if (!submissions.isEmpty()) {
             double total = 0;
             for (QuizSubmission s : submissions) {

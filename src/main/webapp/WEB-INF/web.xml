@@ -5,6 +5,13 @@
          version="4.0">
 
     <display-name>LMS Web Application</display-name>
+    <session-config>
+        <cookie-config>
+            <http-only>true</http-only>
+            <secure>false</secure>
+        </cookie-config>
+        <tracking-mode>COOKIE</tracking-mode>
+    </session-config>
 
     <welcome-file-list>
         <welcome-file>index.jsp</welcome-file>
